@@ -1,117 +1,86 @@
-# Project Requirements Document: codeguide-starter
-
----
+# Project Requirements Document (PRD)
 
 ## 1. Project Overview
 
-The **codeguide-starter** project is a boilerplate web application that provides a ready-made foundation for any web project requiring secure user authentication and a post-login dashboard. It sets up the common building blocks—sign-up and sign-in pages, API routes to handle registration and login, and a simple dashboard interface driven by static data. By delivering this skeleton, it accelerates development time and ensures best practices are in place from day one.
+We are building **SmartOLT GIS Monitor**, a real-time, full-stack web application that gives Network Operations Center (NOC) staff an interactive geographic view of critical network components—namely Optical Line Terminals (OLTs), Optical Distribution Points (ODPs), and Optical Network Units (ONUs). By consuming data from the SmartOlt API and displaying it on a dynamic map, operators can instantly see each device’s status (online, offline, or loss-of-signal), trace cable connections, and access detailed metrics—all on a high-resolution 4K screen.
 
-This starter kit is being built to solve the friction developers face when setting up repeated common tasks: credential handling, session management, page routing, and theming. Key objectives include: 1) delivering a fully working authentication flow (registration & login), 2) providing a gated dashboard area upon successful login, 3) establishing a clear, maintainable project structure using Next.js and TypeScript, and 4) demonstrating a clean theming approach with global and section-specific CSS. Success is measured by having an end-to-end login journey in under 200 lines of code and zero runtime type errors.
-
----
+This application is designed to solve the problem of distributed and siloed network information. Instead of logging into multiple tools or reading text logs, NOC personnel get a unified, visual dashboard that updates every 30–60 seconds. Key success criteria include: fast initial load on large displays, clear status color-coding on the map, secure user access, and reliable real-time updates without hitting API rate limits.
 
 ## 2. In-Scope vs. Out-of-Scope
 
-### In-Scope (Version 1)
-- User registration (sign-up) form with validation
-- User login (sign-in) form with validation
-- Next.js API routes under `/api/auth/route.ts` handling:
-  - Credential validation
-  - Password hashing (e.g., bcrypt)
-  - Session creation or JWT issuance
-- Protected dashboard pages under `/dashboard`:
-  - `layout.tsx` wrapping dashboard content
-  - `page.tsx` rendering static data from `data.json`
-- Global application layout in `/app/layout.tsx`
-- Basic styling via `globals.css` and `dashboard/theme.css`
-- TypeScript strict mode enabled
+### In-Scope (Version 1.0)
+- User authentication and session management (Better Auth integration)
+- Backend-for-Frontend (BFF) API proxy routes to SmartOlt endpoints
+- Interactive GIS map component (React Leaflet or Mapbox GL JS)
+- Real-time polling (every 30–60s) with caching (SWR or React Query)
+- PostgreSQL database schema for users, ODP locations, and cached API data (Drizzle ORM)
+- Core UI components: map markers, polylines, detail dialogs, data table
+- Light/dark theme switcher and responsive design for 4K displays
+- Docker and Docker Compose setup for local development and production
+- Basic unit, integration, and end-to-end tests
 
-### Out-of-Scope (Later Phases)
-- Integration with a real database (PostgreSQL, MongoDB, etc.)
-- Advanced authentication flows (password reset, email verification, MFA)
-- Role-based access control (RBAC)
-- Multi-tenant or white-label theming
-- Unit, integration, or end-to-end testing suites
-- CI/CD pipeline and production deployment scripts
-
----
+### Out-of-Scope (Planned for Later Phases)
+- SMS/email alert notifications or incident management
+- Predictive analytics or machine learning for outage forecasting
+- Granular role-based permissions beyond admin/operator
+- Offline mode or edge-cached deployment
+- Mobile-optimized or native mobile app
+- Geofencing or heatmap overlays
 
 ## 3. User Flow
 
-A new visitor lands on the root URL and sees a welcome page with options to **Sign Up** or **Sign In**. If they choose Sign Up, they fill in their email, password, and hit “Create Account.” The form submits to `/api/auth/route.ts`, which hashes the password, creates a new user session or token, and redirects them to the dashboard. If any input is invalid, an inline error message explains the issue (e.g., “Password too short”).
+When a NOC operator arrives at the dashboard, they first land on a login page. They enter their credentials, which the app verifies via Better Auth. Upon success, they are redirected to the main **Dashboard** screen, which spans the full browser window. A collapsible sidebar on the left offers navigation links (Dashboard, Settings, Logs), while the right-hand area shows the GIS map centered on the service region.
 
-Once authenticated, the user is taken to the `/dashboard` route. Here they see a sidebar or header defined by `dashboard/layout.tsx`, and the main panel pulls in static data from `data.json`. They can log out (if that control is present), but otherwise their entire session is managed by server-side cookies or tokens. Returning users go directly to Sign In, submit credentials, and upon success they land back on `/dashboard`. Any unauthorized access to `/dashboard` redirects back to Sign In.
-
----
+Once the map loads, it fetches device data through internal API routes. Each ONU, ODP, and OLT appears as a colored marker—green for online, red for offline, yellow for LOS (loss of signal). The operator can pan and zoom to focus on problem areas. Clicking any marker opens a slide-over or dialog panel with detailed stats (last heartbeat, signal strength graph, location details). The map also draws polylines from each ONU to its parent ODP for quick visual correlation.
 
 ## 4. Core Features
 
-- **Sign-Up Page (`/app/sign-up/page.tsx`)**: Form fields for email & password, client-side validation, POST to `/api/auth`.
-- **Sign-In Page (`/app/sign-in/page.tsx`)**: Form fields for email & password, client-side validation, POST to `/api/auth`.
-- **Authentication API (`/app/api/auth/route.ts`)**: Handles both registration and login based on HTTP method, integrates password hashing (bcrypt) and session or JWT logic.
-- **Global Layout (`/app/layout.tsx` + `globals.css`)**: Shared header, footer, and CSS resets across all pages.
-- **Dashboard Layout (`/app/dashboard/layout.tsx` + `dashboard/theme.css`)**: Sidebar or top nav for authenticated flows, section-specific styling.
-- **Dashboard Page (`/app/dashboard/page.tsx`)**: Reads `data.json`, renders it as cards or tables.
-- **Static Data Source (`/app/dashboard/data.json`)**: Example dataset to demo dynamic rendering.
-- **TypeScript Configuration**: `tsconfig.json` with strict mode and path aliases (if any).
-
----
+- **Authentication & Authorization**: Secure sign-in, session cookies, and protected routes.
+- **BFF API Proxy**: Next.js API routes that merge SmartOlt data and hide API keys.
+- **Interactive GIS Map**: Render markers and polylines, pan/zoom controls, clickable pop-ups.
+- **Real-Time Polling & Caching**: Automatic background refresh with configurable interval and local caching to throttle API calls.
+- **Data Persistence**: PostgreSQL tables for users, ODP coordinates, and cached API responses via Drizzle ORM.
+- **UI Components & Theming**: Reusable Radix UI / Shadcn/ui dialogs, tables, charts, plus Tailwind CSS themes.
+- **Dockerized Deployment**: Dockerfile and docker-compose.yml for app and database containers.
+- **Testing Suite**: Unit tests (Vitest or Jest), integration tests (React Testing Library), E2E tests (Playwright or Cypress).
 
 ## 5. Tech Stack & Tools
 
-- **Framework**: Next.js (App Router) for file-based routing, SSR/SSG, and API routes.
-- **Language**: TypeScript for type safety.
-- **UI Library**: React 18 for component-based UI.
-- **Styling**: Plain CSS via `globals.css` (global reset) and `theme.css` (sectional styling). Can easily migrate to CSS Modules or Tailwind in the future.
-- **Backend**: Node.js runtime provided by Next.js API routes.
-- **Password Hashing**: bcrypt (npm package).
-- **Session/JWT**: NextAuth.js or custom JWT logic (to be decided in implementation).
-- **IDE & Dev Tools**: VS Code with ESLint, Prettier extensions. Optionally, Cursor.ai for AI-assisted coding.
-
----
+- Frontend: Next.js (v13+) with App Router, React, TypeScript
+- Styling: Tailwind CSS with CSS variables, Radix UI, Shadcn/ui
+- GIS Library: React Leaflet (open-source) or Mapbox GL JS
+- State & Data Fetching: React Query or SWR
+- Backend: Next.js API Routes (Node.js), TypeScript
+- Authentication: Better Auth (JWT or session cookies)
+- Database: PostgreSQL, Drizzle ORM (Type-safe SQL)
+- Containerization: Docker, Docker Compose
+- CI/CD: GitHub Actions (testing & deployment workflows)
+- Testing: Vitest/Jest, React Testing Library, Playwright/Cypress
 
 ## 6. Non-Functional Requirements
 
-- **Performance**: Initial page load under 200 ms on a standard broadband connection. API responses under 300 ms.
-- **Security**:
-  - HTTPS only in production.
-  - Proper CORS, CSRF protection for API routes.
-  - Secure password storage (bcrypt with salt).
-  - No credentials or secrets checked into version control.
-- **Scalability**: Structure must support adding database integration, caching layers, and advanced auth flows without rewiring core app.
-- **Usability**: Forms should give real-time feedback on invalid input. Layout must be responsive (mobile > 320 px).
-- **Maintainability**: Code must adhere to TypeScript strict mode. Linting & formatting enforced by ESLint/Prettier.
-
----
+- Performance: Initial load ≤ 2 seconds; map interaction latency < 100 ms.
+- Scalability: Handle thousands of map markers without degrading user experience (marker clustering if needed).
+- Security: HTTPS everywhere, OWASP best practices, secure storage of environment variables.
+- Availability: 99.9% uptime target; graceful handling of SmartOlt API downtime.
+- Usability: High-contrast UI for on-call readability; keyboard navigation for dialogs; responsive 4K layout.
+- Compliance: GDPR-compatible data handling; logs do not store sensitive user data.
 
 ## 7. Constraints & Assumptions
 
-- **No Database**: Dashboard uses only `data.json`; real database integration is deferred.
-- **Node Version**: Requires Node.js >= 14.
-- **Next.js Version**: Built on Next.js 13+ App Router.
-- **Authentication**: Assumes availability of bcrypt or NextAuth.js at implementation time.
-- **Hosting**: Targets serverless or Node.js-capable hosting (e.g., Vercel, Netlify).
-- **Browser Support**: Modern evergreen browsers; no IE11 support required.
-
----
+- **SmartOlt API Rate Limits**: Assume a soft limit of X requests/minute; must implement caching and polling intervals accordingly.
+- **Static ODP Locations**: ODP coordinates do not change frequently; can be loaded once and stored in DB.
+- **Env Requirements**: Node.js v18+, PostgreSQL v13+, modern browser support (Chromium-based NOC displays).
+- **Screen Size**: Primary display is a 50-inch, 4K resolution monitor.
 
 ## 8. Known Issues & Potential Pitfalls
 
-- **Static Data Limitation**: `data.json` is only for demo. A real API or database will be needed to avoid stale data.
-  *Mitigation*: Define a clear interface for data fetching so swapping to a live endpoint is trivial.
-
-- **Global CSS Conflicts**: Using global styles can lead to unintended overrides.
-  *Mitigation*: Plan to migrate to CSS Modules or utility-first CSS in Phase 2.
-
-- **API Route Ambiguity**: Single `/api/auth/route.ts` handling both sign-up and sign-in could get complex.
-  *Mitigation*: Clearly branch on HTTP method (`POST /register` vs. `POST /login`) or split into separate files.
-
-- **Lack of Testing**: No test suite means regressions can slip in.
-  *Mitigation*: Build a minimal Jest + React Testing Library setup in an early iteration.
-
-- **Error Handling Gaps**: Client and server must handle edge cases (network failures, malformed input).
-  *Mitigation*: Define a standard error response schema and show user-friendly messages.
+- **API Rate Limits**: Excessive polling can hit SmartOlt limits. Mitigation: cache results server-side and batch endpoint calls.
+- **Map Performance**: Rendering thousands of markers can lag. Mitigation: use clustering plugins or canvas-based marker layers.
+- **CORS & Environment**: Improper header config on API proxy may block requests. Mitigation: test headers in development and production modes.
+- **Data Consistency**: SmartOlt API endpoint changes can break the BFF routes. Mitigation: write modular client code in `lib/smartolt-client.ts` and add unit tests around data parsing.
+- **Schema Migrations**: Extending Drizzle ORM schema requires coordination with existing data. Mitigation: use versioned migration scripts and backup DB before applying changes.
 
 ---
 
-This PRD should serve as the single source of truth for the AI model or any developer generating the next set of technical documents: Tech Stack Doc, Frontend Guidelines, Backend Structure, App Flow, File Structure, and IDE Rules. It contains all functional and non-functional requirements with no ambiguity, enabling seamless downstream development.
+This PRD should guide all subsequent technical documentation and implementation steps. It leaves no ambiguity around scope, workflows, technologies, and risks.

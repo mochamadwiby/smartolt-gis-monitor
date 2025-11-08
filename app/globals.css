@@ -120,4 +120,233 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Custom styles for 4K displays */
+  @media (min-width: 3840px) {
+    html {
+      font-size: 18px;
+    }
+  }
+
+  /* Leaflet custom styles */
+  .leaflet-container {
+    font-family: inherit;
+  }
+
+  .device-marker {
+    transition: all 0.2s ease;
+  }
+
+  .device-marker:hover {
+    transform: scale(1.2);
+    z-index: 1000;
+  }
+
+  /* Custom scrollbar for better appearance */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  /* Dark mode scrollbar */
+  .dark ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Dashboard specific styles */
+  .dashboard-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  @media (min-width: 3840px) {
+    .dashboard-grid {
+      gap: 1.5rem;
+    }
+  }
+
+  /* Animation for connection lines */
+  @keyframes dashAnimation {
+    to {
+      stroke-dashoffset: -15;
+    }
+  }
+
+  .animated-connection {
+    animation: dashAnimation 0.5s linear infinite;
+  }
+
+  /* Pulse animation for alerts */
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .alert-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Loading skeleton animation */
+  @keyframes shimmer {
+    0% {
+      background-position: -200px 0;
+    }
+    100% {
+      background-position: calc(200px + 100%) 0;
+    }
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0.1) 100%
+    );
+    background-size: 200px 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  .dark .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+  }
+
+  /* Glass morphism effects */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .dark .glass {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Status indicator colors */
+  .status-online {
+    @apply text-green-500 bg-green-500/10 border-green-500/20;
+  }
+
+  .status-offline {
+    @apply text-red-500 bg-red-500/10 border-red-500/20;
+  }
+
+  .status-warning {
+    @apply text-yellow-500 bg-yellow-500/10 border-yellow-500/20;
+  }
+
+  .status-unknown {
+    @apply text-gray-500 bg-gray-500/10 border-gray-500/20;
+  }
+
+  /* Responsive grid for 4K */
+  .grid-responsive {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  @media (min-width: 2560px) {
+    .grid-responsive {
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
+  }
+
+  @media (min-width: 3840px) {
+    .grid-responsive {
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 1.5rem;
+    }
+  }
+}
+
+@layer components {
+  /* Custom button styles for dashboard */
+  .btn-dashboard {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:scale-105 active:scale-95;
+  }
+
+  .btn-primary-dashboard {
+    @apply btn-dashboard bg-blue-600 hover:bg-blue-700 text-white;
+  }
+
+  .btn-secondary-dashboard {
+    @apply btn-dashboard bg-white/10 hover:bg-white/20 text-white border border-white/20;
+  }
+
+  /* Custom card styles for dashboard */
+  .card-dashboard {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6;
+  }
+
+  .dark .card-dashboard {
+    @apply bg-black/20 border-white/10;
+  }
+
+  /* Custom metric card styles */
+  .metric-card {
+    @apply relative overflow-hidden bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 rounded-xl p-6;
+  }
+
+  .dark .metric-card {
+    @apply from-black/20 to-black/10 border-white/10;
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  }
+}
+
+/* Print styles for dashboard */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .leaflet-control-container {
+    display: none;
+  }
 }

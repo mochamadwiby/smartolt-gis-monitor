@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Parkinsans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SmartOLTQueryProvider } from "@/lib/query-client";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,9 +20,9 @@ const parkinsans = Parkinsans({
 });
 
 export const metadata: Metadata = {
-  title: "Codeguide Starter Fullstack",
+  title: "SmartOLT GIS Monitor",
   description:
-    "A modern Next.js starter with TypeScript, TailwindCSS, shadcn/ui, Better Auth, and Drizzle ORM",
+    "Real-time GIS monitoring dashboard for SmartOLT fiber optic network with OLT, ONU, and ODP visualization",
 };
 
 export default function RootLayout({
@@ -36,11 +37,13 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <SmartOLTQueryProvider>
+            {children}
+          </SmartOLTQueryProvider>
         </ThemeProvider>
       </body>
     </html>

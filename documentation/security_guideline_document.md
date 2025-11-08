@@ -1,116 +1,154 @@
-# Security Guidelines for codeguide-starter
+# Security Guidelines for smartolt-gis-monitor
 
-This document defines mandatory security principles and implementation best practices tailored to the **codeguide-starter** repository. It aligns with Security-by-Design, Least Privilege, Defense-in-Depth, and other core security tenets. All sections reference specific areas of the codebase (e.g., `/app/api/auth/route.ts`, CSS files, environment configuration) to ensure practical guidance.
-
----
-
-## 1. Security by Design
-
-• Embed security from day one: review threat models whenever adding new features (e.g., new API routes, data fetching).
-• Apply “secure defaults” in Next.js configuration (`next.config.js`), enabling strict mode and disabling debug flags in production builds.
-• Maintain a security checklist in your PR template to confirm that each change has been reviewed against this guideline.
+This document outlines security best practices and recommendations for the `smartolt-gis-monitor` project. It addresses key areas such as authentication, data protection, API security, infrastructure hardening, and DevOps processes. Adhering to these guidelines will help ensure a robust, secure, and compliant NOC monitoring dashboard.
 
 ---
 
-## 2. Authentication & Access Control
+## 1. Secure Authentication & Authorization
 
-### 2.1 Password Storage
-- Use **bcrypt** (or Argon2) with a per-user salt to hash passwords in `/app/api/auth/route.ts`.
-- Enforce a strong password policy on both client and server: minimum 12 characters, mixed case, numbers, and symbols.
+- **Strong Password Policies**
+  - Enforce minimum length (≥ 12 characters) and complexity (uppercase, lowercase, digits, symbols).
+  - Implement password rotation reminders or expiration if organizational policy demands.
+  - Use bcrypt or Argon2 with unique salt for hashing (avoid deprecated algorithms).  
 
-### 2.2 Session Management
-- Issue sessions via Secure, HttpOnly, SameSite=strict cookies. Do **not** expose tokens to JavaScript.
-- Implement absolute and idle timeouts. For example, invalidate sessions after 30 minutes of inactivity.
-- Protect against session fixation by regenerating session IDs after authentication.
+- **Multi-Factor Authentication (MFA)**
+  - Require MFA (e.g., TOTP, SMS, hardware tokens) for all administrative or privileged roles.
+  - Offer optional MFA for standard operator accounts.
 
-### 2.3 Brute-Force & Rate Limiting
-- Apply rate limiting at the API layer (e.g., using `express-rate-limit` or Next.js middleware) on `/api/auth` to throttle repeated login attempts.
-- Introduce exponential backoff or temporary lockout after N failed attempts.
+- **Session Management**
+  - Use secure, unpredictable session identifiers stored in HTTP-only, Secure, SameSite=strict cookies.
+  - Enforce idle timeouts (e.g., 15–30 min) and absolute session lifetimes.
+  - Provide explicit logout functionality that invalidates server-side sessions or JWTs.
+  - Protect against session fixation by regenerating session IDs after login.
 
-### 2.4 Role-Based Access Control (Future)
-- Define user roles in your database model (e.g., `role = 'user' | 'admin'`).
-- Enforce server-side authorization checks in every protected route (e.g., in `dashboard/layout.tsx` loader functions).
+- **Role-Based Access Control (RBAC)**
+  - Define clear roles (e.g., operator, engineer, admin) and permissions for each API route.
+  - Perform server-side authorization checks on every request.  
+  - Enforce the principle of least privilege—no user should have more rights than needed.
 
----
+## 2. Input Validation & Output Encoding
 
-## 3. Input Handling & Processing
+- **Server-Side Validation**  
+  - Validate all incoming data (query parameters, JSON bodies, file uploads) using a schema validator (e.g., Zod or Yup).  
+  - Enforce strict types and value ranges (e.g., lat/long bounds, pagination limits).
 
-### 3.1 Validate & Sanitize All Inputs
-- On **client** (`sign-up/page.tsx`, `sign-in/page.tsx`): perform basic format checks (email regex, password length).
-- On **server** (`/app/api/auth/route.ts`): re-validate inputs with a schema validator (e.g., `zod`, `Joi`).
-- Reject or sanitize any unexpected fields to prevent injection attacks.
+- **Prevent Injection**  
+  - Use prepared statements or Drizzle ORM’s parameter binding for all database queries.
+  - Reject or sanitize any unexpectedly formatted input before passing to SQL or OS commands.
 
-### 3.2 Prevent Injection
-- If you introduce a database later, always use parameterized queries or an ORM (e.g., Prisma) rather than string concatenation.
-- Avoid dynamic `eval()` or template rendering with unsanitized user input.
+- **Cross-Site Scripting (XSS) Mitigation**  
+  - Escape and encode user-supplied values in JSX/templates using React’s default escaping.
+  - Implement a Content Security Policy (CSP) header restricting script sources.
 
-### 3.3 Safe Redirects
-- When redirecting after login or logout, validate the target against an allow-list to prevent open redirects.
+- **CSRF Protection**  
+  - For state-changing endpoints, require CSRF tokens (e.g., synchronizer token pattern) or enforce SameSite=strict cookies if using cookie-based auth.
 
----
+- **File Upload Security**  
+  - Restrict upload file types (MIME and extension whitelist).
+  - Scan uploads for malware if storing or processing externally.
+  - Store uploads outside the webroot with restrictive file permissions.
 
-## 4. Data Protection & Privacy
+## 3. Data Protection & Privacy
 
-### 4.1 Encryption & Secrets
-- Enforce HTTPS/TLS 1.2+ for all front-end ↔ back-end communications.
-- Never commit secrets—use environment variables and a secrets manager (e.g., AWS Secrets Manager, Vault).
+- **Encryption in Transit & At Rest**  
+  - Enforce HTTPS/TLS 1.2+ for all frontend–backend and backend–API communications.
+  - Enable TLS on database connections (PostgreSQL SSL mode).
+  - Encrypt sensitive fields (e.g., API keys, PII) at rest if required by compliance.
 
-### 4.2 Sensitive Data Handling
-- Do ​not​ log raw passwords, tokens, or PII in server logs. Mask or redact any user identifiers.
-- If storing PII in `data.json` or a future database, classify it and apply data retention policies.
+- **Secret Management**  
+  - Do not hardcode secrets in source code. Use environment variables or a secrets manager (AWS Secrets Manager, Vault).
+  - Rotate API keys and database credentials regularly.
 
----
+- **Logging & Error Handling**  
+  - Avoid exposing stack traces or sensitive data in error responses.
+  - Log events securely—mask or redact PII.
+  - Centralize logs in a secure, access-controlled system.
 
-## 5. API & Service Security
+## 4. API & Service Security
 
-### 5.1 HTTPS Enforcement
-- In production, redirect all HTTP traffic to HTTPS (e.g., via Vercel’s redirect rules or custom middleware).
+- **Backend-for-Frontend (BFF) Proxy**  
+  - Secure Next.js API routes with server-side authentication and authorization.
+  - Store SmartOlt API keys only on the server, never expose to the client.
 
-### 5.2 CORS
-- Configure `next.config.js` or API middleware to allow **only** your front-end origin (e.g., `https://your-domain.com`).
+- **Rate Limiting & Throttling**  
+  - Implement per-IP or per-user rate limits on critical routes (e.g., `/api/smartolt/*`).
+  - Consider burst size and enforce cooldown periods to mitigate brute-force and DoS.
 
-### 5.3 API Versioning & Minimal Exposure
-- Version your API routes (e.g., `/api/v1/auth`) to handle future changes without breaking clients.
-- Return only necessary fields in JSON responses; avoid leaking internal server paths or stack traces.
+- **CORS Configuration**  
+  - Restrict `Access-Control-Allow-Origin` to known NOC frontend domains.
+  - Define allowed methods and headers explicitly.
 
----
+- **API Versioning & Minimization**  
+  - Version your internal APIs (e.g., `/api/v1/smartolt/onus`).
+  - Return only necessary fields in JSON responses to limit data exposure.
 
-## 6. Web Application Security Hygiene
+## 5. Web Application Security Hygiene
 
-### 6.1 CSRF Protection
-- Use anti-CSRF tokens for any state-changing API calls. Integrate Next.js CSRF middleware or implement synchronizer tokens stored in cookies.
-
-### 6.2 Security Headers
-- In `next.config.js` (or a custom server), add these headers:
-  - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
+- **Security Headers**  
+  - `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`
+  - `X-Frame-Options: DENY` or `Content-Security-Policy: frame-ancestors 'none'`
   - `X-Content-Type-Options: nosniff`
-  - `X-Frame-Options: DENY`
   - `Referrer-Policy: no-referrer-when-downgrade`
-  - `Content-Security-Policy`: restrict script/style/src to self and trusted CDNs.
+  - `Permissions-Policy` to disable unused browser features.
 
-### 6.3 Secure Cookies
-- Set `Secure`, `HttpOnly`, `SameSite=Strict` on all cookies. Avoid storing sensitive data in `localStorage`.
+- **Secure Cookies**  
+  - Set cookies with `HttpOnly`, `Secure`, and `SameSite=strict`.
 
-### 6.4 Prevent XSS
-- Escape or encode all user-supplied data in React templates. Avoid `dangerouslySetInnerHTML` unless content is sanitized.
+- **Subresource Integrity (SRI)**  
+  - For any third-party scripts/styles from CDNs, include `integrity` and `crossorigin` attributes.
 
----
+## 6. Infrastructure & Configuration Management
 
-## 7. Infrastructure & Configuration Management
+- **Server Hardening**  
+  - Disable unused services and remove default/demo accounts.
+  - Apply the principle of least privilege to OS users and processes.
 
-- Harden your hosting environment (e.g., Vercel/Netlify) by disabling unnecessary endpoints (GraphQL/GraphiQL playgrounds in production).
-- Rotate secrets and API keys regularly via your secrets manager.
-- Maintain minimal privileges: e.g., database accounts should only have read/write on required tables.
-- Keep Node.js, Next.js, and all system packages up to date.
+- **Network Security**  
+  - Only expose necessary ports (80/443 for web, 5432 for database restricted via firewall/VPC).
+  - Place the database in a private subnet inaccessible from the public internet.
 
----
+- **TLS Configuration**  
+  - Use modern cipher suites (ECDHE, AES-GCM).
+  - Disable SSLv3, TLS 1.0, and TLS 1.1.
 
-## 8. Dependency Management
+- **File & Directory Permissions**  
+  - Ensure application files are owned by a dedicated service account with minimal rights.
 
-- Commit and maintain `package-lock.json` to guarantee reproducible builds.
-- Integrate a vulnerability scanner (e.g., GitHub Dependabot, Snyk) to monitor and alert on CVEs in dependencies.
-- Trim unused packages; each added library increases the attack surface.
+- **Disable Debug in Production**  
+  - Turn off Next.js verbose errors and debug routes in production environments.
 
----
+## 7. Dependency & Supply Chain Management
 
-Adherence to these guidelines will ensure that **codeguide-starter** remains secure, maintainable, and resilient as it evolves. Regularly review and update this document to reflect new threats and best practices.
+- **Use Trusted Libraries**  
+  - Vet NPM packages (community reputation, maintenance status, open security advisories).
+
+- **Vulnerability Scanning**  
+  - Integrate SCA tools (e.g., `npm audit`, Snyk, GitHub Dependabot) in CI pipelines.
+
+- **Lockfiles & Pinning**  
+  - Commit `package-lock.json` or `yarn.lock` to ensure deterministic installs.
+
+- **Minimize Footprint**  
+  - Remove or avoid heavy, unused dependencies to reduce attack surface.
+
+## 8. DevOps & CI/CD Security
+
+- **Secure CI/CD Secrets**  
+  - Store tokens and credentials in encrypted vaults or CI secrets storage.
+  - Avoid printing sensitive values in build logs.
+
+- **Automated Testing & Compliance Checks**  
+  - Automate linter (ESLint), type-checking (TypeScript), unit tests, integration tests, and E2E tests in CI.
+  - Fail builds on high-severity vulnerabilities or test regressions.
+
+- **Docker & Container Security**  
+  - Use minimal base images (e.g., `node:alpine`).
+  - Scan images for CVEs before deployment.
+  - Run containers with non-root user privileges.
+
+- **Infrastructure as Code (IaC)**  
+  - If using Terraform, CloudFormation, or similar, validate templates against security policies (e.g., IAM least privilege, no public S3 buckets).
+
+## Conclusion
+
+By embedding these security practices throughout the `smartolt-gis-monitor` lifecycle—from design to production—you will ensure a resilient, trustworthy, and compliant monitoring solution for your NOC environment. Regularly review and update configurations, dependencies, and processes to keep pace with evolving threats and best practices.
