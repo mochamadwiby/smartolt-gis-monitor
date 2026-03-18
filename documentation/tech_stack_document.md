@@ -1,90 +1,114 @@
-# Tech Stack Document
+# smartolt-gis-monitor Tech Stack Document
 
-This document explains the key technologies chosen for the **codeguide-starter** project. It’s written in everyday language so anyone—technical or not—can understand why each tool was picked and how it supports the application.
+This document explains, in everyday language, the main technology choices for the smartolt-gis-monitor project. It shows how each piece helps us build a user-friendly, reliable GIS dashboard for network operations.
 
 ## 1. Frontend Technologies
-The frontend is everything the user sees and interacts with. For this project, we’ve used:
+These are the tools and libraries that power everything you see and interact with in your browser:
 
-- **Next.js (App Router)**
-  - A React framework that makes page routing, server-side rendering, and API routes very simple.
-  - Enhances user experience by pre-rendering pages on the server or at build time, leading to faster initial load.
-- **React 18**
-  - The underlying library for building user interfaces with reusable components.
-  - Provides a smooth, interactive experience thanks to its virtual DOM and modern hooks.
-- **TypeScript**
-  - A superset of JavaScript that adds types (labels for data).
-  - Helps catch errors early during development and makes the code easier to maintain.
-- **CSS (globals.css & theme.css)**
-  - **globals.css** applies base styles (fonts, colors, resets) across the entire app.
-  - **dashboard/theme.css** defines the look and feel specific to the dashboard area.
-  - This separation keeps styles organized and avoids accidental style conflicts.
+- Next.js (App Router)
+  - A popular framework that gives us a fast, server-rendered website. It makes pages load quickly and helps with search engines without extra setup.
+- TypeScript
+  - A way to write JavaScript with extra checks so we catch errors early. It makes the code easier to maintain as the project grows.
+- Tailwind CSS (with CSS variables)
+  - A utility-first styling framework that lets us build a clean, responsive design quickly. CSS variables let us switch between light and dark modes easily.
+- Radix UI & Shadcn/ui
+  - Ready-made, accessible components (buttons, dialogs, tables) that look consistent and work well across devices.
+- React Hooks (`useState`, `useContext`)
+  - Built-in React features to manage page state and share data (like user info) between components.
+- Mapping Library (React Leaflet or Mapbox GL JS)
+  - Lets us display an interactive map with markers for ONUs, ODPs, and OLTs. Users can pan, zoom, and click for details.
+- Data Fetching (SWR or React Query)
+  - Helps load and update data in real time by polling our backend every 30–60 seconds, keeping the map and tables fresh without manual refresh.
 
-By combining these tools, we have a clear structure (Next.js folders for pages and layouts), safer code (TypeScript), and flexible styling with vanilla CSS.
+**How these help the user experience**
+- Fast initial load thanks to server rendering
+- Clear, consistent UI with ready-built components
+- Seamless light/dark mode for 24/7 dashboards
+- Interactive map for an intuitive geographic view
+- Automatic data updates to reflect network changes in near real time
 
 ## 2. Backend Technologies
-The backend handles data, user accounts, and the logic behind the scenes. Our choices here are:
+Here’s what runs behind the scenes to handle data, security, and business logic:
 
-- **Next.js API Routes**
-  - Allows us to write server-side code (`route.ts` files) alongside our frontend in the same project.
-  - Runs on Node.js, so we can handle requests like sign-up, sign-in, and data fetching in one place.
-- **Node.js Runtime**
-  - The JavaScript environment on the server that executes our API routes.
-- **bcrypt** (npm package)
-  - A library for hashing passwords securely before storing them.
-  - Ensures that even if someone got access to our data, raw passwords aren’t visible.
-- **(Optional) NextAuth.js or JWT**
-  - While this starter kit shows a custom authentication flow, it can easily integrate services like NextAuth.js for email-based login or JWT (JSON Web Tokens) for stateless sessions.
+- Next.js API Routes (Backend-for-Frontend)
+  - Acts as a secure bridge between the frontend and external services. It hides sensitive API keys and merges data from multiple sources into a single, clean response.
+- Better Auth
+  - Manages user sign-in, sessions, and role-based access control so only authorized NOC personnel can view or edit data.
+- PostgreSQL Database
+  - A reliable, open-source database for storing user accounts, app settings, ODP locations, historical logs, and cached API results.
+- Drizzle ORM
+  - A type-safe layer on top of PostgreSQL that makes it easy to define and run database queries without raw SQL.
+- `lib/smartolt-client.ts`
+  - A small helper module that wraps all calls to the external SmartOlt API, keeping network logic organized in one place.
+- Environment Variables
+  - Securely store API keys and other secrets on the server, so they never get exposed in the user’s browser.
 
-These components work together to receive user credentials, verify or store them securely, manage sessions or tokens, and deliver protected data back to the frontend.
+**How these work together**
+1. Frontend calls our internal API routes (e.g., `/api/smartolt/onus`).  
+2. API routes use `smartolt-client` to fetch data from the SmartOlt API.  
+3. Data is optionally stored or cached in PostgreSQL via Drizzle.  
+4. API routes combine and return the data to the frontend in a single payload.
 
 ## 3. Infrastructure and Deployment
-Infrastructure covers where and how we host the app, as well as how changes get delivered:
+Tools and processes that ensure the application runs smoothly, scales with demand, and is easy to update:
 
-- **Git & GitHub**
-  - Version control system (Git) and remote hosting (GitHub) keep track of all code changes and allow team collaboration.
-- **Vercel (or Netlify)**
-  - A popular hosting service optimized for Next.js, with one-click deployments and global content delivery.
-  - Automatically rebuilds and deploys the site whenever code is pushed to the main branch.
-- **GitHub Actions (CI/CD)**
-  - Automates tasks like linting (ESLint), formatting (Prettier), and running any tests you add.
-  - Ensures that only clean, tested code goes live.
+- Docker & Docker Compose
+  - Containerize the Next.js app and PostgreSQL database so they run consistently in any environment.
+- GitHub Actions (CI/CD)
+  - Automatically run tests, build Docker images, and deploy to production whenever code is pushed to the main branch.
+- Version Control (Git & GitHub)
+  - Keep track of code changes, collaborate with other developers, and maintain a clean history of updates.
+- Hosting Platform (e.g., Vercel, AWS, or any Docker-friendly server)
+  - Runs the containers in the cloud, ensuring high availability and easy scaling as more operators use the dashboard.
 
-Together, these tools provide a reliable, scalable setup where every code change is tested and deployed quickly, with minimal manual work.
+**Benefits for reliability and scalability**
+- Consistent environments from development to production
+- Automated checks and deployments reduce human error
+- Easy rollbacks if something goes wrong
+- Scalability through container orchestration or cloud auto-scaling
 
 ## 4. Third-Party Integrations
-While this starter kit is minimal by design, it already includes or can easily add:
+Services and APIs that extend functionality without reinventing the wheel:
 
-- **bcrypt**
-  - For secure password hashing (included as an npm dependency).
-- **NextAuth.js** (optional)
-  - A full-featured authentication library supporting email/password, OAuth, and more.
-- **Sentry or LogRocket** (optional)
-  - For real-time error tracking and performance monitoring in production.
+- SmartOlt API
+  - Provides real-time data on ONUs, ODPs, and OLTs (coordinates, status, signal graphs).
+- Mapping Library (React Leaflet or Mapbox GL JS)
+  - Displays geographical data over a map with interactive features.
 
-These integrations help extend the app’s capabilities without building every feature from scratch.
+**Why these matter**
+- SmartOlt API is the core data source for network status.
+- Mapping libraries make geographic visualization easy, interactive, and informative.
 
 ## 5. Security and Performance Considerations
-We’ve baked in several measures to keep users safe and the app running smoothly:
+Key measures to protect data and keep the experience smooth:
 
 Security:
-- Passwords are never stored in plain text—bcrypt hashes them with a random salt.
-- API routes can implement CSRF protection and input validation to block malicious requests.
-- Session tokens or cookies are marked secure and HttpOnly to prevent theft via JavaScript.
+- Authentication & Authorization (Better Auth)
+  - Ensures only the right people can access specific parts of the dashboard.
+- Environment Variables & BFF Pattern
+  - Keeps API keys and secrets safely on the server, never in the browser.
+- Role-Based Access Control
+  - Different permission levels for operators, engineers, and administrators.
 
 Performance:
-- Server-side rendering (SSR) and static site generation (SSG) in Next.js deliver pages faster.
-- Code splitting and lazy-loaded components ensure users only download what they need.
-- Global CSS and theme files are small and cached by the browser for quick repeat visits.
-
-These strategies work together to give users a fast, secure experience every time.
+- Server-Side Rendering (Next.js)
+  - Delivers a fully rendered page on the first load for faster perceived performance.
+- Caching & Polling (SWR or React Query)
+  - Reduces unnecessary API calls by caching responses and only refetching on a set interval.
+- Database Indexing & Drizzle ORM
+  - Efficient data retrieval for large tables like historical logs or ODP coordinates.
+- Tailwind CSS Utility Classes
+  - Produces small, focused stylesheets that load quickly and avoid unused CSS.
 
 ## 6. Conclusion and Overall Tech Stack Summary
-In building **codeguide-starter**, we chose technologies that:
+Below is a quick recap of our technology choices and why they align with the project goals:
 
-- Align with modern web standards (Next.js, React, TypeScript).
-- Provide a clear, file-based project structure for rapid onboarding.
-- Offer built-in support for server-side rendering, API routes, and static assets.
-- Emphasize security through password hashing, session management, and safe defaults.
-- Enable easy scaling and future enhancements via modular code and optional integrations.
+- **Next.js + TypeScript**: Fast, maintainable, and SEO-friendly frontend.  
+- **Tailwind CSS + Radix UI/Shadcn/ui**: Flexible, accessible, and theme-friendly design.  
+- **React Leaflet/Mapbox GL JS**: Intuitive GIS display at the heart of the dashboard.  
+- **Next.js API Routes + Better Auth**: Secure, centralized backend logic and user management.  
+- **PostgreSQL + Drizzle ORM**: Robust, type-safe data storage for all app data.  
+- **Docker + GitHub Actions**: Reliable deployment workflow and scalable infrastructure.  
+- **SmartOlt API Integration**: Single source of truth for network component data.
 
-This stack strikes a balance between simplicity for newcomers and flexibility for experienced teams. It accelerates development of a secure authentication flow and a polished dashboard, while leaving room to plug in databases, test suites, and advanced features as the project grows.
+These technologies come together to deliver a production-ready, interactive GIS monitoring dashboard that is secure, scalable, and easy to maintain. By choosing well-supported tools and following established patterns, we ensure a reliable user experience for NOC personnel around the clock.

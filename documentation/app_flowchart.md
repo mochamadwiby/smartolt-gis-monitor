@@ -1,14 +1,20 @@
 flowchart TD
-  Start[Landing Page]
-  SignUpPage[Sign Up Page]
-  SignInPage[Sign In Page]
-  AuthAPI[Authentication API Endpoint]
-  DashboardPage[Dashboard Page]
-  Start -->|Select Sign Up| SignUpPage
-  Start -->|Select Sign In| SignInPage
-  SignUpPage -->|Submit Credentials| AuthAPI
-  SignInPage -->|Submit Credentials| AuthAPI
-  AuthAPI -->|Success| DashboardPage
-  AuthAPI -->|Error| SignUpPage
-  AuthAPI -->|Error| SignInPage
-  DashboardPage -->|Click Logout| Start
+  Start[Start] --> LoginPage[Login Page]
+  LoginPage --> Authenticate[Authenticate User]
+  Authenticate --> DashboardPage[Dashboard Page]
+  DashboardPage --> RequestONUData[Request ONU Data]
+  RequestONUData --> InternalAPIRoute[Internal API Route]
+  InternalAPIRoute --> FetchCoords[Fetch GPS Coordinates]
+  InternalAPIRoute --> FetchStatuses[Fetch ONU Statuses]
+  FetchCoords --> MergeData[Merge Data]
+  FetchStatuses --> MergeData
+  MergeData --> ReturnData[Return Data to Frontend]
+  ReturnData --> RenderMap[Render Map with Markers]
+  RenderMap --> ClickMarker[Click Marker on Map]
+  ClickMarker --> RequestDetails[Request ONU Details]
+  RequestDetails --> DetailsAPIRoute[Internal API ONU Details]
+  DetailsAPIRoute --> DBLookup[Database Lookup ODP Coordinates]
+  DBLookup --> ReturnDetails[Return ONU Details]
+  ReturnDetails --> OpenDialog[Open Detail Dialog]
+  RenderMap --> DrawPolylines[Draw Polylines to ODP]
+  OpenDialog --> End[End]

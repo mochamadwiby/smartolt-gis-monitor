@@ -1,180 +1,141 @@
-# Frontend Guideline Document
+# smartolt-gis-monitor Frontend Guideline Document
 
-This document explains, in simple terms, how the frontend of the `codeguide-starter` project is structured, styled, and built. Anyone—technical or not—can read this and understand which tools are used, how components fit together, and what practices keep the app fast, reliable, and easy to maintain.
-
----
+This document outlines the frontend architecture, design principles, and technologies used in the smartolt-gis-monitor project. It’s written in clear, everyday language so that anyone—technical or not—can understand how the frontend is set up and why certain choices were made.
 
 ## 1. Frontend Architecture
 
-**Core Frameworks and Libraries**
-- **Next.js (App Router)**: A React-based framework that provides file-based routing, server-side rendering (SSR), static site generation (SSG), and built-in API endpoints all in one project.
-- **React 18**: The library for building user interfaces using components and hooks.
-- **TypeScript**: A superset of JavaScript that adds static types, helping catch errors early and making the code easier to understand and refactor.
+**Framework & Libraries**
+- **Next.js (App Router)**: Provides file-based routing, server-side rendering (SSR), and API routes. It’s the backbone of our frontend and gives us great performance out of the box.
+- **TypeScript**: Adds type checking to JavaScript, catching errors early and making the code easier to maintain.
+- **Radix UI & Shadcn/ui**: A collection of accessible, production-ready components (dialogs, tables, buttons) that we can customize to build our map pop-ups, sidebars, and info panels.
 
-**How It’s Organized**
-- The `app/` folder holds all pages and layouts. Each URL path corresponds to a folder:
-  - `/app/sign-in` and `/app/sign-up` for authentication pages.
-  - `/app/dashboard` for the protected user area.
-  - API routes live under `/app/api/auth/route.ts`.
-- Each route folder contains:
-  - `page.tsx` (the UI for that page)
-  - `layout.tsx` (wrapping structure, like headers or sidebars)
-  - Styles (e.g., `theme.css` in the dashboard).
-
-**Why This Works**
-- **Scalability**: Adding new pages or features means creating new folders with their own layouts and pages. You don’t have to touch a central router file.
-- **Maintainability**: Code is separated by feature. Backend logic (API routes) lives alongside the frontend code for that feature, reducing context-switching.
-- **Performance**: Next.js pre-renders pages where possible and splits code by route, so users download only what’s needed.
-
----
+**How It Supports Our Goals**
+- **Scalability**: File-based routing and modular components let us grow the app without the codebase turning into a tangled mess.
+- **Maintainability**: TypeScript and clear folder structures mean new developers (or you, in six months) can quickly understand what’s going on.
+- **Performance**: Server-side rendering (SSR) gives fast initial loads. Next.js also does automatic code splitting so users only download what they need.
+- **Security (BFF Pattern)**: Next.js API routes act as a Backend-for-Frontend (BFF). This hides our SmartOlt API keys on the server and lets us reshape data before it reaches the browser.
 
 ## 2. Design Principles
 
-1. **Usability**: Forms give instant feedback. Buttons and links are clearly labeled.
-2. **Accessibility**: Semantic HTML, proper color contrast, and focus outlines ensure people using screen readers or keyboards can navigate easily.
-3. **Responsiveness**: Layouts adapt from mobile (320px) up to large desktop screens. CSS media queries ensure content resizes and stacks neatly.
-4. **Consistency**: Shared global layout and styling mean pages look and feel like part of the same app.
+We follow a few simple rules to keep the interface user-friendly:
 
-**How We Apply Them**
-- Form fields use `aria-*` attributes and visible labels.
-- Error messages appear inline under inputs.
-- Navigation elements (header, sidebar) appear in every layout.
-- Breakpoints at 480px, 768px, and 1024px guide responsive adjustments.
+- **Usability**: Controls are intuitive. Buttons, dialogs, and tables look and behave consistently.
+- **Accessibility**: We use Radix UI’s accessible components, adhere to contrast guidelines, and include keyboard navigation everywhere.
+- **Responsiveness**: The layout adapts to any screen size—from a desktop browser to a 50-inch 4K NOC display.
+- **Clarity**: We favor clear iconography, readable text sizes, and straightforward color coding (e.g., green for healthy ONUs, red for offline).
 
----
+**Applying These Principles**
+- All interactive elements have focus states and alt text for screen readers.
+- Layouts use flexible CSS (Tailwind’s utility classes) so panels, maps, and tables rearrange smoothly.
+- We test with real users or stakeholders on 4K monitors to confirm the interface remains clear at a distance.
 
 ## 3. Styling and Theming
 
-**Approach**
-- **Global Styles (`globals.css`)**: Resets, base typography, and common utility classes.
-- **Section Styles (`theme.css` in dashboard)**: Styles specific to the dashboard area (colors, layouts).
-- We follow a **BEM-inspired naming** for classes when writing new CSS to avoid conflicts and keep selectors clear.
+**Styling Approach**
+- **Tailwind CSS**: A utility-first framework. We use preconfigured utility classes plus custom CSS variables for easy theming.
+- **No heavy CSS files**—styles live alongside components, keeping things organized and preventing style clashes.
 
-**Visual Style**: Modern flat design with subtle shadows for depth. Clear spacing and large touch targets on mobile.
-
-**Color Palette**
-- **Primary Blue**: #1E90FF  (buttons, highlights)
-- **Secondary Navy**: #2C3E50  (header, sidebar background)
-- **Accent Cyan**: #00CEC9  (links, hover states)
-- **Neutral Light**: #F8F9FA  (page backgrounds)
-- **Neutral Dark**: #2D3436  (text, icons)
-
-**Font**
-- **Inter** (sans-serif): Clean, modern, highly legible on screens. Fallback to system fonts like `-apple-system, BlinkMacSystemFont, sans-serif`.
+**CSS Methodology**
+- **Utility-First**: Instead of BEM or SMACSS, we rely on Tailwind’s small, composable classes.
+- **Custom Variables**: Define colors and spacing in `:root` so we can switch themes quickly.
 
 **Theming**
-- To keep a consistent look, all colors and font sizes are defined in CSS variables in `globals.css`:
-  ```css
-  :root {
-    --color-primary: #1E90FF;
-    --color-secondary: #2C3E50;
-    --color-accent: #00CEC9;
-    --color-bg: #F8F9FA;
-    --color-text: #2D3436;
-    --font-family: 'Inter', sans-serif;
-  }
-  ```
-- Components consume these variables for backgrounds, borders, and text.
+- Two modes: **Light** and **Dark**. Users can toggle these in settings. We store the choice in `localStorage` and read it on load.
+- Tailwind’s `dark:` variants handle inverted color schemes automatically.
 
----
+**Visual Style**: Modern & Flat
+- Clean edges, minimal shadows, and vibrant color accents.
+- No skeuomorphism—just clear, flat surfaces that highlight data.
+
+**Color Palette**
+- Primary Blue: #3B82F6
+- Success Green: #10B981
+- Warning Orange: #F59E0B
+- Error Red: #EF4444
+- Info Teal: #0EA5E9
+- Background Light: #FFFFFF
+- Background Dark: #1F2937
+- Text Light: #111827
+- Text Dark: #F9FAFB
+
+**Font**
+- **Inter** (or a system sans-serif stack): Modern, highly legible at large sizes.
 
 ## 4. Component Structure
 
-**File Layout**
-- `/app` (top-level folder)
-  - `layout.tsx`: Global wrapper (nav, footer).
-  - `page.tsx`: Landing or redirect logic.
-  - `/sign-in`, `/sign-up`, `/dashboard`, `/api/auth`
-    - Each has its own `layout.tsx` and `page.tsx`.
-- **Common Components**: Put reusable UI pieces (buttons, inputs, cards) into a `/components` folder at the project root.
+We group components by purpose and reuse them everywhere:
 
-**Reusability & Encapsulation**
-- Components are self-contained: each has its own styles (class names scoped to BEM) and behavior.
-- Shared logic (e.g., API calls) lives in `/lib` or `/hooks` so pages import only what they need.
+- **`components/ui/`**: Generic building blocks—buttons, dialogs, tables, sheets.
+- **`components/map/`**: Map-specific pieces like markers, polylines, and pop-ups.
+- **`app/dashboard/`**: The main dashboard page that stitches everything together.
+- **`app/api/`**: Serverless API routes for our Backend-for-Frontend layer.
+- **`lib/`**: Utilities and API client logic (e.g., `lib/smartolt-client.ts`).
 
-**Benefits**
-- **Easier Maintenance**: Fix a bug in one button component, and it updates everywhere.
-- **Better Team Collaboration**: Developers can own specific components or pages without stepping on each other’s code.
-
----
+**Why Component-Based?**
+- **Reusability**: One button style used in a dialog is the same as in a table toolbar.
+- **Maintainability**: Fix a bug in one component, and you fix it everywhere it’s used.
+- **Team Collaboration**: Designers and developers work on isolated pieces without stepping on each other’s toes.
 
 ## 5. State Management
 
-**Current Approach**
-- **Local State**: React `useState` and `useEffect` for form values, loading flags, and error messages.
-- **Server State**: Fetch data (e.g., dashboard JSON) directly in page components or using React Server Components.
+**Local State**
+- **React `useState`** for simple, local component state (e.g., toggling a dropdown).
+- **React `useContext`** for light cross-component state sharing (e.g., current theme).
 
-**Sharing State**
-- **React Context**: A simple auth context (`AuthContext`) holds the user’s session info, login/logout methods, and makes it available to any component.
-  - Located in `/context/AuthContext.tsx`.
+**Server Data & Real-Time**
+- **React Query** or **SWR** for fetching, caching, and polling data from our API routes.
+  - Configurable polling (`refetchInterval`) to refresh ONU statuses every 30–60 seconds.
+  - Automatic cache invalidation when data changes.
 
-**Future Growth**
-- If complexity grows (deeply nested data, multiple user roles), consider:
-  - **Redux Toolkit** or **Zustand** for centralized state.
-  - Query libraries like **React Query** or **SWR** for caching and re-fetch logic.
-
----
+This two-tier approach keeps things simple while ensuring our map and tables show up-to-date information.
 
 ## 6. Routing and Navigation
 
-**Routing Library**
-- Built into **Next.js App Router**. Each folder under `/app` becomes a route automatically.
-- Layouts (`layout.tsx`) and pages (`page.tsx`) are colocated for that route.
+**File-Based Routing**
+- We use Next.js App Router (`app/` directory).
+- **Pages** become URLs automatically—`app/dashboard/page.tsx` → `/dashboard`.
 
-**Protected Pages**
-- The dashboard’s `layout.tsx` checks for a valid session (via cookie or context). If missing, it issues a server-side redirect to `/sign-in`.
+**Navigation**
+- **Next.js `Link`** component for client-side navigation, keeping transitions snappy.
+- **Dynamic Routes** for details views—e.g., `app/onu/[id]/page.tsx` to show a single ONU’s history.
 
-**Navigation Structure**
-- **Header**: Present in global layout with the app logo and conditional Sign In/Sign Out links.
-- **Sidebar**: Included in `dashboard/layout.tsx` with links to dashboard sections (expandable in future).
-
----
+**API Routes (BFF)**
+- Stored under `app/api/smartolt/`.
+- Example: `app/api/smartolt/onus/route.ts` calls SmartOlt endpoints, merges coordinate and status data, and returns a single JSON object to the frontend.
 
 ## 7. Performance Optimization
 
-1. **Code Splitting**: Next.js automatically breaks code by route. Users only load JS needed for the current page.
-2. **Lazy Loading**: For large components (charts, maps), wrap with `next/dynamic` to load them only when needed.
-3. **Image Optimization**: Use Next.js `<Image>` component to serve responsive, compressed images.
-4. **Caching**:
-   - Static assets (CSS, fonts) use long cache headers.
-   - API responses can be cached or ISR (Incremental Static Regeneration) applied.
-5. **Minification & Compression**: Next.js production builds automatically minify JS and CSS, and enable Brotli/Gzip on the CDN.
-
-These steps ensure fast page loads and smooth interactions.
-
----
+- **Server-Side Rendering (SSR)** for initial page loads to improve Time-to-First-Byte (TTFB).
+- **Code Splitting & Dynamic Imports**: Load heavy components (like the map library) only when the dashboard mounts.
+- **Image Optimization**: Use Next.js `<Image>` component for any static assets.
+- **Caching & Polling**: React Query / SWR cache responses and only re-fetch when needed.
+- **Asset Minification**: Handled by Next.js—CSS and JS get minified in production builds.
 
 ## 8. Testing and Quality Assurance
 
 **Unit Tests**
-- **Jest** + **React Testing Library** for components and utility functions.
-- Example: test that the Sign In form shows an error message when fields are empty.
+- **Vitest** or **Jest** for testing utility functions and the API client (`lib/smartolt-client.ts`).
 
 **Integration Tests**
-- Combine multiple components and hooks; test API calls with **msw** (Mock Service Worker).
+- **React Testing Library** to verify that components render correctly and interact as expected (e.g., clicking a marker opens a dialog).
 
 **End-to-End (E2E) Tests**
-- **Cypress** or **Playwright** to simulate real user flows: signing up, logging in, and viewing the dashboard.
+- **Playwright** or **Cypress** to simulate user flows: log in, view map, click an ONU, see details.
 
-**Linting & Formatting**
-- **ESLint** enforces code style and catches common bugs.
-- **Prettier** applies consistent formatting.
-- **Git Hooks** (via Husky) run linting/tests before each commit.
-
-**Continuous Integration (CI)**
-- **GitHub Actions** runs tests and lint on each pull request, preventing regressions.
-
----
+**CI/CD**
+- **GitHub Actions** runs tests on every pull request and push to `main`.
+- Builds Docker images and deploys them automatically if tests pass.
 
 ## 9. Conclusion and Overall Frontend Summary
 
-The `codeguide-starter` frontend is built on modern, well-established tools—Next.js, React, and TypeScript—and follows clear principles around usability, accessibility, and maintainability. Its file-based structure, component-driven approach, and CSS-variable theming keep things organized and consistent.
+The smartolt-gis-monitor frontend is built on a modern, scalable stack:
 
-Key takeaways:
-- **Scalable Structure**: Add new features by creating new folders under `app/` without touching a central router.
-- **Component Reuse**: Shared UI pieces live in one place, making updates quick and error-free.
-- **Simple Styling**: Global and section-specific CSS, underpinned by CSS variables, ensures a unified look.
-- **Smooth Performance**: Next.js automatic optimizations plus best practices like lazy loading and caching.
-- **Quality Assurance**: A testing plan that covers unit, integration, and E2E scenarios, enforced by CI.
+- **Next.js** with **TypeScript** for robust, maintainable code.
+- **Tailwind CSS** with a flat, modern style and light/dark theming.
+- **Radix UI** & **Shadcn/ui** for accessible, reusable components.
+- **React Query** (or SWR) for smooth data fetching and real-time updates.
+- **Next.js API Routes** as a secure BFF layer hiding our SmartOlt API keys.
+- **Testing** across unit, integration, and end-to-end levels.
+- **CI/CD** pipeline delivering reliable, containerized deployments.
 
-With these guidelines, any developer coming into the project can understand how the pieces fit together, how to follow existing patterns, and how to keep the app fast, reliable, and easy to grow.
+All these pieces work together to give your Network Operations Center a fast, clear, and reliable GIS monitoring dashboard. Whether you’re tracking a single ONU or scanning an entire city’s fiber network on a 4K wall display, this setup ensures your team always sees the most accurate data in the most intuitive way.
